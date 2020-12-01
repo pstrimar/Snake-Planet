@@ -8,6 +8,7 @@ public class GravityBody : MonoBehaviour
     {
         planet = FindObjectOfType<Planet>();
 
+        // Turn gravity off since we will be using our planet's gravity
         GetComponent<Rigidbody>().useGravity = false;
 
         GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezeRotation;
@@ -15,7 +16,7 @@ public class GravityBody : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (planet)
+        if (planet != null)
         {
             planet.Attract(this.transform);
         }

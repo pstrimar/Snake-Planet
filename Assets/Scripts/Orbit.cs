@@ -16,6 +16,7 @@ public class Orbit : MonoBehaviour
 
     void Update()
     {
+        // Camera orbits on x axis
         if (orbital != null)
             orbital.m_XAxis.Value += Time.deltaTime * speed;
     }

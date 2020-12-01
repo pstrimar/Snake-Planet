@@ -3,23 +3,16 @@ using UnityEngine;
 
 public class PositionCamera : MonoBehaviour
 {
-    public MainMenuUI mainMenuUI;
     public GameObject vCam;
 
     private void OnEnable()
     {
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay += HandleReplay;
-        }
+        MainMenuUI.onPlay += HandleReplay;
     }
 
     private void OnDisable()
     {
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay -= HandleReplay;
-        }
+        MainMenuUI.onPlay -= HandleReplay;
     }
 
     private void HandleReplay()
@@ -27,6 +20,7 @@ public class PositionCamera : MonoBehaviour
         StartCoroutine(DisableAndReEnableCamera());
     }
 
+    // Prevents jerky camera transition
     private IEnumerator DisableAndReEnableCamera()
     {
         vCam.SetActive(false);

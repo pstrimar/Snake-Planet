@@ -1,27 +1,16 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Advertisements;
 
 public class AdManager : MonoBehaviour
 {
-    public SnakeMovement movement;
-
     private void OnEnable()
     {
-        if (movement != null)
-        {
-            movement.onGameOver += HandleGameOver;
-        }
+        SnakeMovement.onGameOver += HandleGameOver;
     }
 
     private void OnDisable()
     {
-        if (movement != null)
-        {
-            movement.onGameOver -= HandleGameOver;
-        }
+        SnakeMovement.onGameOver -= HandleGameOver;
     }
 
     private void HandleGameOver()

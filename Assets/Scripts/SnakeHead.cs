@@ -8,9 +8,10 @@ public class SnakeHead : MonoBehaviour
     {
         if (collision.gameObject.tag == "Obstacle" || collision.gameObject.tag == "Snake")
         {
-            if (collision.transform != snake.bodyParts[1] && snake.isAlive)
+            // Do not kill snake from collision with body part directly behind head
+            if (collision.transform != snake.BodyParts[1] && snake.IsAlive)
             {
-                if (Time.time - snake.timeFromLastRetry > 5)
+                if (Time.time - snake.TimeFromLastRetry > 5)
                     snake.Die();
             }
         }

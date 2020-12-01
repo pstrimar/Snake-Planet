@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.UI;
 
 public class DayNight : MonoBehaviour
 {
@@ -10,6 +9,7 @@ public class DayNight : MonoBehaviour
     [SerializeField] GameObject dayLight;
     [SerializeField] GameObject nightLight;
 
+    // Sets the skybox, lighting, fog, and UI for day mode
     public void DayMode()
     {
         RenderSettings.skybox = daySkyBox;
@@ -24,6 +24,7 @@ public class DayNight : MonoBehaviour
         nightLight.SetActive(false);
     }
 
+    // Sets the skybox, lighting, fog, and UI for night mode
     public void NightMode()
     {
         RenderSettings.skybox = nightSkyBox;

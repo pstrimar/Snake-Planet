@@ -5,12 +5,11 @@ using UnityEngine.UI;
 
 public class MainMenuUI : MonoBehaviour
 {
-    public event Action onPlay;
+    public static event Action onPlay;
     public GameObject postProcessing;
-    public GameObject snake;
+    public Grow grow;
     public GameObject finalScoreText;
-    public GameObject currentScoreText;
-    public GameObject bestScoreText;
+    public GameObject GamePlayUI;
     public GameObject mainMenuUI;
     public GameObject titleText;
     public GameObject gameOverText;
@@ -18,7 +17,7 @@ public class MainMenuUI : MonoBehaviour
     public CinemachineVirtualCamera mainVCam;
     public CinemachineVirtualCamera introVCam;
     public SnakeMovement movement;
-    public Button pauseButton;
+    public Text pauseButtonText;
 
     private bool isPaused;
 
@@ -31,36 +30,28 @@ public class MainMenuUI : MonoBehaviour
 
     private void Start()
     {
-        currentScoreText.SetActive(false);
-        bestScoreText.SetActive(false);
+        GamePlayUI.SetActive(false);
     }
 
     private void OnEnable()
     {
-        if (movement != null)
-        {
-            movement.onGameOver += HandleGameOver;
-        }
+        SnakeMovement.onGameOver += HandleGameOver;
     }
 
     private void OnDisable()
     {
-        if (movement != null)
-        {
-            movement.onGameOver -= HandleGameOver;
-        }
+        SnakeMovement.onGameOver -= HandleGameOver;
     }
 
+    // Switch to main camera, hide main menu UI, show gameplay UI, and enable movement/growth of snake
     public void Play()
     {
-        snake.GetComponent<Grow>().enabled = true;
+        grow.enabled = true;
         titleText.SetActive(false);
         mainMenuUI.SetActive(false);
-        currentScoreText.SetActive(true);
-        bestScoreText.SetActive(true);
+        GamePlayUI.SetActive(true);
         mainVCam.Priority = 20;
         introVCam.enabled = false;
-        pauseButton.gameObject.SetActive(true);
 
         onPlay?.Invoke();
     }
@@ -69,21 +60,23 @@ public class MainMenuUI : MonoBehaviour
     {
         isPaused = !isPaused;
 
+        // Switch cameras and stop movement/growth of snake
         if (isPaused)
         {
             introVCam.enabled = true;
-            snake.GetComponent<Grow>().enabled = false;
+            grow.enabled = false;
             movement.enabled = false;
             mainVCam.Priority = 10;
-            pauseButton.GetComponentInChildren<Text>().text = "►";
+            pauseButtonText.text = "►";
         } 
+        // Switch cameras and enable movement/growth of snake
         else
         {
             introVCam.enabled = false;
-            snake.GetComponent<Grow>().enabled = true;
+            grow.enabled = true;
             movement.enabled = true;
             mainVCam.Priority = 20;
-            pauseButton.GetComponentInChildren<Text>().text = "||";
+            pauseButtonText.text = "||";
         }
         
     }
@@ -96,14 +89,15 @@ public class MainMenuUI : MonoBehaviour
 
     private void HandleGameOver()
     {
+        // Smooth transition to orbiting camera
         introVCam.enabled = true;
         mainVCam.Priority = 10;
+
+        // Show Game Over UI
         mainMenuUI.SetActive(true);
         gameOverText.SetActive(true);
         finalScoreText.SetActive(true);
-        currentScoreText.SetActive(false);
-        bestScoreText.SetActive(false);
-        pauseButton.gameObject.SetActive(false);
+        GamePlayUI.SetActive(false);
         finalScoreText.GetComponent<Text>().text = "Your score was: " + GetComponent<Score>().finalScore.ToString();
     }
 }

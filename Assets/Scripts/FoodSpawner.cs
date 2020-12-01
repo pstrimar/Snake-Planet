@@ -6,12 +6,9 @@ public class FoodSpawner : MonoBehaviour
 {
     public GameObject foodPrefab;
     public GameObject planet;
-    public MainMenuUI mainMenuUI;
     public float foodHeight = 1f;
-    public int startingFood = 15;
-    public int foodValue = 3;
+    public int startingFood = 15;    
     public List<GameObject> foodList = new List<GameObject>();
-    public event Action<int> onFoodPickup;
 
     private new AudioSource audio;
 
@@ -22,28 +19,26 @@ public class FoodSpawner : MonoBehaviour
 
     private void OnEnable()
     {
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay += HandleReplay;
-        }
+        MainMenuUI.onPlay += HandleReplay;
+        FoodPickup.onFoodPickedUp += HandleFoodPickup;
     }
 
     private void OnDisable()
     {
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay -= HandleReplay;
-        }
+        MainMenuUI.onPlay -= HandleReplay;
+        FoodPickup.onFoodPickedUp -= HandleFoodPickup;
     }
 
     private void Update()
     {
+        // Spawn food if we have less than our starting count
         while (foodList.Count < startingFood)
         {
             SpawnFood();
         }
     }
 
+    // Spawn on a random position on the planet and orient the food
     public void SpawnFood()
     {
         Vector3 spawnPosition = UnityEngine.Random.onUnitSphere * (planet.GetComponent<SphereCollider>().radius * planet.transform.localScale.x);
@@ -56,12 +51,13 @@ public class FoodSpawner : MonoBehaviour
         food.transform.Rotate(-90, 0, 0);
     }
 
-    public void BroadcastFoodPickup()
+    private void HandleFoodPickup(GameObject food, int foodValue)
     {
         audio.Play();
-        onFoodPickup?.Invoke(foodValue);
+        foodList.Remove(food);
     }
 
+    // Destroy all food and clear list
     private void HandleReplay()
     {
         foreach (GameObject food in foodList)

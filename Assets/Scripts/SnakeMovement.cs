@@ -5,88 +5,80 @@ using UnityEngine;
 
 public class SnakeMovement : MonoBehaviour
 {
-    public List<Transform> bodyParts = new List<Transform>();
-    public Joystick joystick;
-    public MainMenuUI mainMenuUI;
-    public FoodSpawner foodSpawner;
-    public float minDistance;
-    public int beginSize;
-    public float speed = 1f;
-    public float rotationSpeed = 50f;
-    public float timeFromLastRetry;
-    public GameObject bodyPrefab;
-    public bool isAlive;
-    public event Action onBodyPartAdded;
-    public event Action onGameOver;
-    public event Action onStartLevel;
+    public List<Transform> BodyParts = new List<Transform>();
+    public Joystick Joystick;
+    public float TimeFromLastRetry;    
+    public bool IsAlive;
+    public float MinDistance;
 
-    private float distance;
-    private float startingMinDistance = 0.025f;
+    public static event Action onBodyPartAdded;
+    public static event Action onGameOver;
+    public static event Action onStartLevel;    
+
+    [SerializeField] GameObject bodyPrefab;
+    [SerializeField] float startingMinDistance = 0.025f;
+    [SerializeField] int beginSize;
+    [SerializeField] float speed = 1f;
+    [SerializeField] float rotationSpeed = 50f;
+
+    private float distance;    
     private Transform currentBodyPart;
     private Transform previousBodyPart;
 
     private void OnEnable()
     {
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay += HandlePlay;
-        }
-
-        if (foodSpawner != null)
-        {
-            foodSpawner.onFoodPickup += HandleFoodPickup;
-        }
+        MainMenuUI.onPlay += HandlePlay;
+        FoodPickup.onFoodPickedUp += HandleFoodPickup;
     }
 
     private void OnDisable()
     {
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay -= HandlePlay;
-        }
-
-        if (foodSpawner != null)
-        {
-            foodSpawner.onFoodPickup -= HandleFoodPickup;
-        }
+        MainMenuUI.onPlay -= HandlePlay;
+        FoodPickup.onFoodPickedUp -= HandleFoodPickup;
     }
 
     void Update()
     {
-        if (isAlive)
+        // Only allow movement when alive
+        if (IsAlive)
             Move();
 
+        // Hide joystick when dead on mobile
 #if UNITY_ANDROID || UNITY_IOS
-        if (!isAlive && joystick.gameObject.activeSelf)
-            joystick.gameObject.SetActive(false);
+        if (!IsAlive && Joystick.gameObject.activeSelf)
+            Joystick.gameObject.SetActive(false);
 #endif
     }
 
     public IEnumerator StartLevel()
     {
+        // Broadcast start level
         onStartLevel?.Invoke();
 
-        timeFromLastRetry = Time.time;
+        TimeFromLastRetry = Time.time;
 
-        minDistance = startingMinDistance;
+        MinDistance = startingMinDistance;
 
+        // Reset scale to 1
         transform.localScale = new Vector3(1, 1, 1);
 
-        for (int i = bodyParts.Count - 1; i > 0; i--)
+        for (int i = BodyParts.Count - 1; i > 0; i--)
         {
-            Destroy(bodyParts[i].gameObject);
-            bodyParts.Remove(bodyParts[i]);
+            Destroy(BodyParts[i].gameObject);
+            BodyParts.Remove(BodyParts[i]);
         }
 
-        bodyParts[0].position = new Vector3(0, 5.141f, 0);
-        bodyParts[0].rotation = Quaternion.identity;
+        // Set position of head of snake to top of planet
+        BodyParts[0].position = new Vector3(0, 5.141f, 0);
+        BodyParts[0].rotation = Quaternion.identity;
 
         // Wait for countdown before moving
         yield return new WaitForSeconds(3);
 
+        // Already starting with the head so we subtract 1
         AddBodyParts(beginSize - 1);
 
-        isAlive = true;
+        IsAlive = true;
     }
 
     public void Move()
@@ -96,16 +88,16 @@ public class SnakeMovement : MonoBehaviour
         float horizontal = 0;
         float vertical = 0;
 
-        //Check if we are running either in the Unity editor or in a standalone build.
+        //Check if we are running either in the Unity editor, WebGL or in a standalone build.
 #if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBGL
 
-        joystick.gameObject.SetActive(false);
+        Joystick.gameObject.SetActive(false);
 
         horizontal = Input.GetAxisRaw("Horizontal");
 
         vertical = Input.GetAxisRaw("Vertical");
 
-        //Check if we are running on iOS, Android, Windows Phone 8 or Unity iPhone
+        //Check if we are running on iOS or Android
 #elif UNITY_ANDROID || UNITY_IOS
 
         joystick.gameObject.SetActive(true);
@@ -114,54 +106,58 @@ public class SnakeMovement : MonoBehaviour
         vertical = joystick.Vertical;
 
 #endif
-
+        // Double our speed if pressing forward
         if (vertical > .5f)
             currentSpeed *= 2f;
 
-        bodyParts[0].Translate(bodyParts[0].forward * currentSpeed * Time.smoothDeltaTime, Space.World);
+        // Translate head of snake forward with our speed
+        BodyParts[0].Translate(BodyParts[0].forward * currentSpeed * Time.smoothDeltaTime, Space.World);
 
+        // Rotate left or right based on horizontal input
         if (Mathf.Abs(horizontal) > .2f)
-            bodyParts[0].Rotate(Vector3.up * rotationSpeed * Time.deltaTime * horizontal);
+            BodyParts[0].Rotate(Vector3.up * rotationSpeed * Time.deltaTime * horizontal);
 
-        for (int i = 1; i < bodyParts.Count; i++)
+        for (int i = 1; i < BodyParts.Count; i++)
         {
-            currentBodyPart = bodyParts[i];
-            previousBodyPart = bodyParts[i - 1];
+            currentBodyPart = BodyParts[i];
+            previousBodyPart = BodyParts[i - 1];
 
             distance = Vector3.Distance(previousBodyPart.position, currentBodyPart.position);
 
             Vector3 newPos = previousBodyPart.position;
 
-            float T = Time.deltaTime * distance / minDistance * currentSpeed;
+            float T = Time.deltaTime * distance / MinDistance * currentSpeed;
 
             if (T > 0.5f)
                 T = 0.5f;
 
+            // Follow previous body part position and rotation over time
             currentBodyPart.position = Vector3.Slerp(currentBodyPart.position, newPos, T);
             currentBodyPart.rotation = Quaternion.Slerp(currentBodyPart.rotation, previousBodyPart.rotation, T);
         }
     }
 
-    public void AddBodyParts(int numberOfSegments)
+    // Adds a number of body parts at the tail position and sets their scale, and adds them to our list
+    private void AddBodyParts(int numberOfSegments)
     {
         for (int i = 0; i < numberOfSegments; i++)
         {
-            Transform newPart = (Instantiate(bodyPrefab, bodyParts[bodyParts.Count - 1].position, bodyParts[bodyParts.Count - 1].rotation) as GameObject).transform;
+            Transform newPart = (Instantiate(bodyPrefab, BodyParts[BodyParts.Count - 1].position, BodyParts[BodyParts.Count - 1].rotation) as GameObject).transform;
 
             newPart.SetParent(transform);
 
-            newPart.transform.localScale = bodyParts[0].localScale;
+            newPart.transform.localScale = BodyParts[0].localScale;
 
-            bodyParts.Add(newPart);
+            BodyParts.Add(newPart);
         }
 
-        if (isAlive)
+        if (IsAlive)
             onBodyPartAdded?.Invoke();
     }
 
     public void Die()
     {
-        isAlive = false;
+        IsAlive = false;
 
         onGameOver?.Invoke();
     }
@@ -171,7 +167,8 @@ public class SnakeMovement : MonoBehaviour
         StartCoroutine(StartLevel());
     }
 
-    private void HandleFoodPickup(int foodValue)
+    // Adds body parts based on value of food we picked up
+    private void HandleFoodPickup(GameObject food, int foodValue)
     {
         AddBodyParts(foodValue);
     }

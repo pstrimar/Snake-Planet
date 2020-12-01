@@ -4,8 +4,6 @@ using UnityEngine.UI;
 public class Score : MonoBehaviour
 {
     public int finalScore { get { return currentScore; } private set { } }
-    public SnakeMovement movement;
-    public MainMenuUI mainMenuUI;
     public Text currentScoreText;
     public Text bestScoreText;
     private int currentScore;
@@ -21,30 +19,17 @@ public class Score : MonoBehaviour
 
     private void OnEnable()
     {
-        if (movement != null)
-        {
-            movement.onBodyPartAdded += UpdateScore;
-        }
-
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay += HandlePlay;
-        }
+        SnakeMovement.onBodyPartAdded += UpdateScore;
+        MainMenuUI.onPlay += HandlePlay;
     }
 
     private void OnDisable()
     {
-        if (movement != null)
-        {
-            movement.onBodyPartAdded -= UpdateScore;
-        }
-
-        if (mainMenuUI != null)
-        {
-            mainMenuUI.onPlay -= HandlePlay;
-        }
+        SnakeMovement.onBodyPartAdded -= UpdateScore;
+        MainMenuUI.onPlay -= HandlePlay;
     }
 
+    // Update scores and UI
     private void UpdateScore()
     {
         currentScore++;
@@ -57,6 +42,7 @@ public class Score : MonoBehaviour
         }
     }
 
+    // Reset score
     private void HandlePlay()
     {
         currentScore = 0;
