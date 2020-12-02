@@ -1,5 +1,6 @@
 ﻿using Cinemachine;
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -89,9 +90,18 @@ public class MainMenuUI : MonoBehaviour
 
     private void HandleGameOver()
     {
+        StartCoroutine(GameOverCoroutine());
+    }
+
+    private IEnumerator GameOverCoroutine()
+    {
         // Smooth transition to orbiting camera
         introVCam.enabled = true;
         mainVCam.Priority = 10;
+
+        yield return new WaitForSeconds(1.5f);
+
+        AdManager.Instance.ShowInterstitialAd();
 
         // Show Game Over UI
         mainMenuUI.SetActive(true);

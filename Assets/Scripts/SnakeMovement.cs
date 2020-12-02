@@ -100,10 +100,10 @@ public class SnakeMovement : MonoBehaviour
         //Check if we are running on iOS or Android
 #elif UNITY_ANDROID || UNITY_IOS
 
-        joystick.gameObject.SetActive(true);
+        Joystick.gameObject.SetActive(true);
 
-        horizontal = joystick.Horizontal;
-        vertical = joystick.Vertical;
+        horizontal = Joystick.Horizontal;
+        vertical = Joystick.Vertical;
 
 #endif
         // Double our speed if pressing forward

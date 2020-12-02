@@ -3,32 +3,46 @@ using UnityEngine.Advertisements;
 
 public class AdManager : MonoBehaviour
 {
-    private void OnEnable()
+    public static AdManager Instance;
+
+#if UNITY_IOS
+    private string gameId = "3913138";
+#elif UNITY_ANDROID
+    private string gameId = "3913139";
+#endif
+    bool testMode = false;
+
+    private void Awake()
     {
-        SnakeMovement.onGameOver += HandleGameOver;
+        if (Instance != null)
+        {
+            if (Instance != this)
+            {
+                Destroy(this.gameObject);
+            }
+        }
+        else
+        {
+            Instance = this;
+        }
     }
 
-    private void OnDisable()
+    void Start()
     {
-        SnakeMovement.onGameOver -= HandleGameOver;
+        // Initialize the Ads service:
+        Advertisement.Initialize(gameId, testMode);
     }
 
-    private void HandleGameOver()
+    public void ShowInterstitialAd()
     {
+        // Check if UnityAds ready before calling Show method:
         if (Advertisement.IsReady())
         {
             Advertisement.Show();
         }
-    }
-
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.E))
+        else
         {
-            if (Advertisement.IsReady("video"))
-            {
-                Advertisement.Show("video");
-            }
+            Debug.Log("Interstitial ad not ready at the moment! Please try again later!");
         }
     }
 }
