@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Advertisements;
 
+#if UNITY_ANDROID || UNITY_IOS
 public class AdManager : MonoBehaviour
 {
     public static AdManager Instance;
@@ -27,11 +28,13 @@ public class AdManager : MonoBehaviour
         }
     }
 
+
     void Start()
     {
         // Initialize the Ads service:
         Advertisement.Initialize(gameId, testMode);
     }
+
 
     public void ShowInterstitialAd()
     {
@@ -46,3 +49,4 @@ public class AdManager : MonoBehaviour
         }
     }
 }
+#endif
