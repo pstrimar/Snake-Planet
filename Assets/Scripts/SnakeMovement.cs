@@ -7,13 +7,13 @@ public class SnakeMovement : MonoBehaviour
 {
     public List<Transform> BodyParts = new List<Transform>();
     public Joystick Joystick;
-    public float TimeFromLastRetry;    
+    public float TimeFromLastRetry;
     public bool IsAlive;
     public float MinDistance;
 
     public static event Action onBodyPartAdded;
     public static event Action onGameOver;
-    public static event Action onStartLevel;    
+    public static event Action onStartLevel;
 
     [SerializeField] GameObject bodyPrefab;
     [SerializeField] float startingMinDistance = 0.025f;
@@ -21,7 +21,7 @@ public class SnakeMovement : MonoBehaviour
     [SerializeField] float speed = 1f;
     [SerializeField] float rotationSpeed = 50f;
 
-    private float distance;    
+    private float distance;
     private Transform currentBodyPart;
     private Transform previousBodyPart;
 
@@ -37,17 +37,18 @@ public class SnakeMovement : MonoBehaviour
         FoodPickup.onFoodPickedUp -= HandleFoodPickup;
     }
 
+    private void Start()
+    {
+#if UNITY_STANDALONE || UNITY_WEBGL
+
+        Joystick.gameObject.SetActive(false);
+#endif
+    }
     void Update()
     {
         // Only allow movement when alive
         if (IsAlive)
             Move();
-
-        // Hide joystick when dead on mobile
-#if UNITY_ANDROID || UNITY_IOS
-        if (!IsAlive && Joystick.gameObject.activeSelf)
-            Joystick.gameObject.SetActive(false);
-#endif
     }
 
     public IEnumerator StartLevel()
@@ -72,6 +73,15 @@ public class SnakeMovement : MonoBehaviour
         BodyParts[0].position = new Vector3(0, 5.141f, 0);
         BodyParts[0].rotation = Quaternion.identity;
 
+#if UNITY_ANDROID || UNITY_IOS
+        // Reset joystick position and values
+        Joystick.enabled = true;
+        Joystick.gameObject.SetActive(true);
+
+        Joystick.Horizontal = 0;
+        Joystick.Vertical = 0;
+#endif
+
         // Wait for countdown before moving
         yield return new WaitForSeconds(3);
 
@@ -89,9 +99,7 @@ public class SnakeMovement : MonoBehaviour
         float vertical = 0;
 
         //Check if we are running either in the Unity editor, WebGL or in a standalone build.
-#if UNITY_EDITOR || UNITY_STANDALONE || UNITY_WEBGL
-
-        Joystick.gameObject.SetActive(false);
+#if UNITY_STANDALONE || UNITY_WEBGL
 
         horizontal = Input.GetAxisRaw("Horizontal");
 
@@ -100,14 +108,20 @@ public class SnakeMovement : MonoBehaviour
         //Check if we are running on iOS or Android
 #elif UNITY_ANDROID || UNITY_IOS
 
-        joystick.gameObject.SetActive(true);
+        horizontal = Joystick.Horizontal;
+        vertical = Joystick.Vertical;
 
-        horizontal = joystick.Horizontal;
-        vertical = joystick.Vertical;
+        // Set horizontal to 1 if greater than .4
+        if (horizontal > .4f)
+            horizontal = Mathf.CeilToInt(horizontal);
+
+        // Set horizontal to -1 if less than -.4
+        if (horizontal < -.4f)
+            horizontal = Mathf.FloorToInt(horizontal);
 
 #endif
         // Double our speed if pressing forward
-        if (vertical > .5f)
+        if (vertical > .3f)
             currentSpeed *= 2f;
 
         // Translate head of snake forward with our speed
@@ -158,6 +172,12 @@ public class SnakeMovement : MonoBehaviour
     public void Die()
     {
         IsAlive = false;
+
+        // Hide joystick when dead on mobile
+#if UNITY_ANDROID || UNITY_IOS
+        Joystick.enabled = false;
+        Joystick.gameObject.SetActive(false);
+#endif
 
         onGameOver?.Invoke();
     }
